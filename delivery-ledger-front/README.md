@@ -1,6 +1,6 @@
 #  delivery ledger
 
-> A Vue.js project
+> A Vue.js project for a delivery company
 
 ## Build Setup
 
