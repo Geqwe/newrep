@@ -7,11 +7,11 @@
         <v-btn flat small dark @click="gotoHome()">Home</v-btn>
         <v-btn flat small dark @click="gotoLog()">Login</v-btn>
         <v-btn flat small dark @click="gotoReg()">Register</v-btn>
-        <v-btn v-show="authenticated" flat small dark @click="logout()">Logout</v-btn>
+        <v-btn v-show="loggedIn" flat small dark @click="logout()">Logout</v-btn>
       </v-toolbar>
-      <router-link v-if="authenticated" to="/login" v-on:click.native="logout()" replace>Logout</router-link>
+      <router-link v-if="loggedIn" to="/login" v-on:click.native="logout()" replace>Logout</router-link>
     <!-- </v-navigation-drawer> -->
-    <router-view @authenticated="setAuthenticated" />
+    <router-view></router-view>
   </v-app>
 </template>
 
@@ -20,24 +20,12 @@ export default {
   name: 'App',
   data() {
     return {
-      authenticated:false,
-      mockAccount: {
-        username: "Nikos",
-        password: "Akelo"
-      }
-    }
-  },
-  mounted() {
-    if(!this.authenticated) {
-      this.$router.replace({ name: "login"});
     }
   },
   methods: {
-    setAuthenticated(status) {
-      this.authenticated = status;
-    },
     logout() {
-      this.authenticated = false;
+      this.$store.dispatch('deleteToken');
+      this.$router.push({ path: '/' });
     },
     gotoLog() {
       this.$router.replace({name: "login"});
@@ -47,6 +35,11 @@ export default {
     },
     gotoHome() {
       this.$router.replace({ name: "homepage"});
+    }
+  },
+  computed: {
+    loggedIn() {
+      return this.$store.getters.loggedIn
     }
   }
 }
