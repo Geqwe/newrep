@@ -27,6 +27,8 @@
 </template>
 
 <script>
+import BackEndApi from '../services/api/backEnd';
+
 export default {
     name: 'Register',
     data() {
@@ -39,7 +41,18 @@ export default {
     methods: {
         register() {
             if(this.email != "" && this.username != "" && this.password != "") {
-                //post sto backend
+                BackEndApi.postCalls('/users/auth/register', {
+                    username: this.username,
+                    password: this.password,
+                    email: this.email
+                })
+                .then(response => {
+                    console.log(response.data);
+                    this.$router.replace({ name: 'login' })
+                })
+                .catch(error => {
+                    console.log(error);
+                })
             }
             else {
                 console.log("An email, a username and a password must be present");
