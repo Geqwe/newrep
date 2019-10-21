@@ -6,7 +6,7 @@ import router from './router'
 import Vuetify from 'vuetify'
 import axios from 'axios'
 import 'vuetify/dist/vuetify.min.css'
-import store from './store/index'
+import store from './store/index' // paizei kai mono store xwris index
 /*
 window.Bus=new Vue;
 window.axios=axios
@@ -22,25 +22,37 @@ axios.defaults.headers.post['Content-Type'] = 'application/json';
 Vue.use(Vuetify)
 
 //Vue.config.productionTip = false
-/*
+
 router.beforeEach((to, from, next) => {
-  if(to.matched.some(record => record.meta.authenticated)) {
-    console.log("checking");
-    if(!authenticated) {
-      console.log("not auth");
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    // this route requires auth, check if logged in
+    // if not, redirect to login page.
+    if (!store.getters.loggedIn) {
       next({
         path: '/login'
       })
     }
     else {
-      next();
+      next()
     }
   }
-  else {
-    next();
+  else if (to.matched.some(record => record.meta.requiresVisitor)) {
+    // this route does not requires auth, check if it is free visitor
+    // if not, redirect to login page.
+    if (store.getters.loggedIn) {
+      next({
+        path: '/'
+      })
+    }
+    else {
+      next()
+    }
+  }
+  else{
+    next() // make sure to always call next()!
   }
 })
-*/
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
