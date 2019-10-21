@@ -10,7 +10,7 @@
                             </v-toolbar>
                             <v-card-text>
                                 <v-form>
-                                    <v-text-field prepend-icon="person" type="text" name="username" v-model="input.username" placeholder="Username(Nikos)" />
+                                    <v-text-field prepend-icon="email" type="email" name="email" v-model="input.email" placeholder="Email(Nikos)" />
                                     <v-text-field prepend-icon="lock" type="password" name="password" v-model="input.password" placeholder="Password(Akelo)" />
                                 </v-form>
                             </v-card-text>
@@ -27,26 +27,32 @@
 </template>
 
 <script>
+import BackEndApi from '../services/api/backEnd';
+
 export default {
     name: 'Login',
     data() {
         return {
             input: {
-                username: "",
+                email: "",
                 password: ""
             }
         }
     },
     methods: {
         login() {
-            if(this.input.username != "" && this.input.password != "") {
-                if(this.input.username == "Nikos" && this.input.password == "Akelo") {
-                    this.$emit("authenticated", true);
-                    this.$router.replace({ name: "homepage"});
-                }
-                else {
-                    console.log("The username and / or password is incorrect");
-                }
+            if(this.input.email != "" && this.input.password != "") {
+                this.$store.dispatch('retrieveToken', {
+                    email: this.input.email,
+                    password: this.input.password
+                })
+                .then(response => {
+                    this.$router.push({ path: '/homepage'})
+                    console.log('You are logged in now!');
+                })
+                .catch( function(error) {
+                    console.log(error);
+                });
             }
             else {
                 console.log("A username and a password must be present");
