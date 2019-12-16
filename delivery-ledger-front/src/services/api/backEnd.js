@@ -2,14 +2,19 @@ import axios from 'axios';
 
 export default {
     postCalls(route, data) {
-      console.log(data);
       return axios.post('http://localhost:5000' + route, data)
         .then(response => {
           return response;
         })
     },
     getCalls(route) {
-      return axios.get('https://localhost:5000' + route)
+      return axios.get('http://localhost:5000' + route)
+        .then(response => {
+          return response;
+        })
+    },
+    getSearch(route) {
+      return axios.get('http://localhost:5000' + route)
         .then(response => {
           return response;
         })
