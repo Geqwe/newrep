@@ -4,6 +4,8 @@
             <v-parallax :src="require('../assets/company1.jpg')" height="750">
                 <v-container fluid fill-height>
                     <v-layout align-bottom justify-center>
+                        <v-snackbar v-model="snackbar_login_failed" :timeout="1200" top>A username and a password must be present</v-snackbar> 
+                        <v-snackbar v-model="snackbar_login_failed2" :timeout="1200" top>Login Failed</v-snackbar> 
                         <v-flex xs3 sm3 md3 lg3 xl3>
                             <v-card class="elevation-24">
                                 <v-toolbar dark color="success">
@@ -30,11 +32,16 @@
 
 <script>
 import BackEndApi from '../services/api/backEnd';
+const sleep = (milliseconds) => { // sleep gia transition sto show info field
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
 
 export default {
     name: 'Login',
     data() {
         return {
+            snackbar_login_failed: false,
+            snackbar_login_failed2: false,
             input: {
                 email: "",
                 password: ""
@@ -53,11 +60,19 @@ export default {
                     console.log('You are logged in now!');
                 })
                 .catch( function(error) {
+                    this.snackbar_login_failed2 = true;
+                    // sleep(1500).then(() => {
+                    //     this.snackbar_login_failed = false;
+                    // })
                     console.log(error);
                 });
             }
             else {
-                console.log("A username and a password must be present");
+                this.snackbar_login_failed = true;
+                sleep(1500).then(() => {
+                this.snackbar_login_failed = false;
+                })
+                console.log("A username and a password must be present!!!");
             }
         },
         gotoReg() {
