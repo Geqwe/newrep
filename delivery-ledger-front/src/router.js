@@ -29,7 +29,7 @@ export default new Router({
         {
             path: "/register",
             name:"register",
-            component: RegisterComponent
+            component: RegisterComponent 
         },
         {
             path: "/deliveryNotes",

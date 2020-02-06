@@ -7,7 +7,6 @@
                         <v-expansion-panel expand v-model="panel"> <!-- panel gia ta notes -->
                             <v-expansion-panel-content>
                                 <v-card dark class="ml-3 mb-1 mr-3"><v-text-field append-icon="search" type="text" name="search" v-model="search" label="ΑΝΑΖΗΤΗΣΗ"></v-text-field></v-card>
-                                
                                 <v-btn flat slot="header" color="grey" dark>Δελτια Αποστολης</v-btn>
                                 <v-list>
                                     <v-divider class="black"></v-divider>
@@ -20,9 +19,20 @@
                                         </v-flex>
                                         <v-flex shrink>
                                             <v-card dark class="mb-1">
-                                                <v-btn small fab color="red"> <!-- koumpi gia svisimo xwrafiou -->
-                                                <v-icon small>clear</v-icon>
-                                                </v-btn>
+                                                <v-dialog ref="dial" v-model="dialog" persistent max-width="500px" dark>
+                                                    <v-btn slot="activator" @click.native="myid=note.id;delName=note.name;changeNote();colorid=note.id;dialog=true;" small fab color="red"> <!-- koumpi gia svisimo deltiou -->
+                                                    <v-icon small>clear</v-icon>
+                                                    </v-btn>
+                                                    <v-card dark>
+                                                        <v-card-title primary-title> Are you sure you want to delete {{ delName }} note? </v-card-title>
+                                                        <v-divider></v-divider>
+                                                        <v-card-actions>
+                                                            <v-spacer></v-spacer>
+                                                            <v-btn @click="dialog=false" flat color="grey" dark>No</v-btn>
+                                                            <v-btn @click="delName=note.name;delId=myid;deleteNote();dialog=false;transition=false;" flat color="grey" dark>Yes</v-btn>
+                                                        </v-card-actions>
+                                                    </v-card>
+                                                </v-dialog>
                                             </v-card>
                                         </v-flex>
                                     </v-layout>
@@ -47,11 +57,10 @@
                             <v-data-table :headers="headers" :items="info_array" hide-actions>
                                 <template slot="items" slot-scope="props">
                                     <td class="text-xs-left">{{ props.item.name }}</td> 
-                                        <div v-if="props.item.name=='ΑΡΧΕΙΟ ΠΑΡΑΓΓΕΛΙΑΣ'">
-                                            <td grow class="text-xs-left">
+                                        <div v-if="props.item.name=='ΑΡΧΕΙΟ ΠΑΡΑΓΓΕΛΙΑΣ' && props.item.info!=null">
+                                            <td class="text-xs-left">
                                                 {{ props.item.info }}
-                                                <!-- <v-btn @click.native="downloadFile()" class="ml-3" shrink prepend-icon="archive" color="blue">Download</v-btn> -->
-                                                <a v-bind:href="'http://localhost:5000/'+props.item.info" download>Download</a>
+                                                <a @click="getToken()">Download</a>
                                             </td>
                                         </div>
                                         <div v-else>
@@ -82,6 +91,8 @@ export default {
     name: 'DeliveryNotes',
     data() {
         return {
+            delName: '',
+            dialog: '',
             search: '',
             searchNotes: '',
             note: '',
@@ -93,7 +104,7 @@ export default {
             notesInfo: [],
             headers: [
                 { text: 'Label', align: 'left', value: 'name' , sortable: false },
-                { text: 'Information', value: 'info' , sortable: false },
+                { text: 'Information',  value: 'info' , sortable: false },
                 //{ Actions: 'Actions', value: 'actions' ,sortable: false }
             ],
             info_array: [ // array gia ta pedia
@@ -151,10 +162,10 @@ export default {
     computed: {
         filteredNotes: function() {
             if(this.search.length>=3) {
-                BackEndApi.getSearch('/deliveryNotes/searchDelivery/'+this.search) // pare ta nea fields wste na allaksei to onoma sto fields
+                BackEndApi.getSearch("/deliveryNotes/searchDeliveryNote/?term="+this.search) // pare ta nea fields wste na allaksei to onoma sto fields
                 .then(response => {
-                    this.searchNotes = response.data.message;
-                    // console.log(this.searchNotes)
+                    sleep(1000).then(() => {this.searchNotes = response.data.message;})
+                    console.log(this.searchNotes)
                 })
                 .catch(error => {
                 console.log(error)
@@ -192,19 +203,47 @@ export default {
         gotoNote() {
             this.$router.replace({ name: "homepage"});
         },
-        downloadFile() {
-            // this.browser.this.downloads.download({
-            //     url : this.info_array[8].info,
-            //     filename : this.info_array[8].info,
-            //     conflictAction : 'uniquify'
-            // })
-            // .then(response => {
-            //     console.log("Started Downloading")
-            //     console.log(this.info_array[8].info)
-            // })
-            // .catch(error => {
-            //     console.log(error)
-            // })
+        getToken() {
+            const token = localStorage.getItem("access_token");
+            axios.defaults.headers.common["Authorization"] = token;
+            axios({
+                method: 'get',
+                url: 'http://10.64.45.62:5000/'+this.info_array[8].info,
+                responseType: 'blob',
+                Authorization: token
+            })
+            .then(response => {
+                console.log(response)
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                var fileLink = document.createElement('a');
+                fileLink.href = url;
+                fileLink.setAttribute('download', 'file.pdf');
+                document.body.appendChild(fileLink);
+                fileLink.click();
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
+        },
+        deleteNote() {
+            console.log(this.delId)
+            const token = localStorage.getItem("access_token");
+            axios.defaults.headers.common["Authorization"] = token;
+            axios.delete('http://10.64.45.62:5000/deliveryNotes/'+this.delId)
+            .then(response => {
+                console.log(response)
+                BackEndApi.getCalls('/deliveryNotes') // pare ta nea fields wste na allaksei to onoma sto fields
+                .then(response => {
+                    this.notesList = response.data.message;
+                    // console.log(this.notesList)
+                })
+                .catch(error => {
+                console.log(error)
+                })
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
         }
     }
 }

@@ -18,5 +18,4 @@ npm run build
 npm run build --report
 ```
 
--- npm start
-*may need cors allow extension*
+npm start

@@ -23,7 +23,7 @@ const actions = {
     retrieveToken(context, credentials) {
 
         return new Promise((resolve, reject) => {
-            BackEndApi.postCalls('/users/auth/login', {
+            BackEndApi.postCalls('/auth/login', {
                 email: credentials.email,
                 password: credentials.password
             })

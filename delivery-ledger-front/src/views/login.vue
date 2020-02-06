@@ -1,27 +1,29 @@
 <template>
     <v-app id="inspire" dark>
         <v-content>
-            <v-container fluid fill-height>
-                <v-layout align-bottom justify-center>
-                    <v-flex xs3 sm3 md3 lg3 xl3>
-                        <v-card class="elevation-24">
-                            <v-toolbar dark color="success">
-                                <v-toolbar-title>Login</v-toolbar-title>
-                            </v-toolbar>
-                            <v-card-text>
-                                <v-form>
-                                    <v-text-field prepend-icon="email" type="email" name="email" v-model="input.email" placeholder="Email(Nikos)" />
-                                    <v-text-field prepend-icon="lock" type="password" name="password" v-model="input.password" placeholder="Password(Akelo)" />
-                                </v-form>
-                            </v-card-text>
-                            <v-card-actions>
-                                <v-btn color="success" @click="login()">Login</v-btn>
-                                <v-btn text small flat depressed @click="gotoReg()">Register</v-btn>
-                            </v-card-actions>
-                        </v-card>
-                    </v-flex>
-                </v-layout>
-            </v-container>
+            <v-parallax :src="require('../assets/company1.jpg')" height="750">
+                <v-container fluid fill-height>
+                    <v-layout align-bottom justify-center>
+                        <v-flex xs3 sm3 md3 lg3 xl3>
+                            <v-card class="elevation-24">
+                                <v-toolbar dark color="success">
+                                    <v-toolbar-title>Login</v-toolbar-title>
+                                </v-toolbar>
+                                <v-card-text>
+                                    <v-form>
+                                        <v-text-field prepend-icon="email" type="email" name="email" v-model="input.email" placeholder="Email" />
+                                        <v-text-field prepend-icon="lock" type="password" name="password" v-model="input.password" placeholder="Password" />
+                                    </v-form>
+                                </v-card-text>
+                                <v-card-actions>
+                                    <v-btn color="success" @click="login()">Login</v-btn>
+                                    <v-btn text small flat depressed @click="gotoReg()">Register</v-btn>
+                                </v-card-actions>
+                            </v-card>
+                        </v-flex>
+                    </v-layout>
+                </v-container>
+            </v-parallax>
         </v-content>
     </v-app>
 </template>
