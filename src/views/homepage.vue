@@ -90,6 +90,7 @@ const sleep = (milliseconds) => { // sleep gia transition sto show info field
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
+// var flag1=0;
 var submitCoords;
 
 export default {
@@ -310,7 +311,11 @@ export default {
         });
     },
     mounted () {
-        this.init_map();
+        // if(this.flag1==0) {
+            this.init_map();
+            // this.flag1=1;
+        // }
+        
     },
     methods: {
         async init_map() {
@@ -319,7 +324,8 @@ export default {
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v11',
                 center:  [23.727539,37.983810],
-                zoom: 4.7
+                zoom: 4.7,
+                attributionControl: false
             });            
             var draw = new MapboxDraw({
                 // Instead of showing all the draw tools, show only the line string and delete tools

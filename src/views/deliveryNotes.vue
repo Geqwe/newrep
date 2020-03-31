@@ -1,10 +1,10 @@
 <template>
     <v-app dark>
         <v-content>
-            <v-container grid-list-md text-xs-center>
+            <v-container grid-list-md>
                 <v-layout row wrap>
                     <v-flex xs4 md4 lg4>
-                        <v-expansion-panel expand v-model="panel"> <!-- panel gia ta notes -->
+                        <v-expansion-panel  v-model="panel"> <!-- panel gia ta notes -->
                             <v-expansion-panel-content>
                                 <v-card dark class="ml-3 mb-1 mr-3"><v-text-field append-icon="search" type="text" name="search" v-model="search" label="ΑΝΑΖΗΤΗΣΗ"></v-text-field></v-card>
                                 <v-btn flat slot="header" color="grey" dark>Δελτια Αποστολης</v-btn>
@@ -47,31 +47,38 @@
                             </v-expansion-panel-content>
                         </v-expansion-panel>
                     </v-flex>
-                    <transition name="fade">
-                        <v-flex v-if="transition" xs8 md8 lg8 > <!-- an einai anoixto ena field kai kleisto to dialog tou new field v-if="(infField == true && check==false)"-->
-                            <v-toolbar color="success">
-                                <v-spacer></v-spacer>
-                                <v-toolbar-title>{{ this.info_array[0].info }}</v-toolbar-title>
-                                <v-spacer></v-spacer>
-                            </v-toolbar>
-                            <v-data-table :headers="headers" :items="info_array" hide-actions>
-                                <template slot="items" slot-scope="props">
-                                    <td class="text-xs-left">{{ props.item.name }}</td> 
-                                        <div v-if="props.item.name=='ΑΡΧΕΙΟ ΠΑΡΑΓΓΕΛΙΑΣ' && props.item.info!=null">
-                                            <td class="text-xs-left">
+                    <v-flex xs4 md4 lg4>
+                        <transition name="fade">
+                            <v-flex v-if="transition" xs12 md12 lg12> <!-- an einai anoixto ena field kai kleisto to dialog tou new field v-if="(infField == true && check==false)"-->
+                                <v-toolbar color="success">
+                                    <v-spacer></v-spacer>
+                                    <v-toolbar-title>{{ this.info_array[0].info }}</v-toolbar-title>
+                                    <v-spacer></v-spacer>
+                                </v-toolbar>
+                                <v-data-table :headers="headers" :items="info_array" hide-actions>
+                                    <template slot="items" slot-scope="props">
+                                        <td class="text-xs-left">{{ props.item.name }}</td> 
+                                            <div v-if="props.item.name=='ΑΡΧΕΙΟ ΠΑΡΑΓΓΕΛΙΑΣ' && props.item.info!=null">
+                                                <td class="text-xs-left">
+                                                    {{ props.item.info }}
+                                                    <a @click="getToken()">Download</a>
+                                                </td>
+                                            </div>
+                                            <div v-else-if="props.item.name=='ΔΙΑΔΡΟΜΗ'">
                                                 {{ props.item.info }}
-                                                <a @click="getToken()">Download</a>
-                                            </td>
-                                        </div>
-                                        <div v-else>
-                                            <td class="text-xs-left">
-                                                {{ props.item.info }}
-                                            </td>
-                                        </div>
-                                </template>
-                            </v-data-table>
-                        </v-flex>
-                    </transition>
+                                                
+                                            </div>
+                                            <div v-else>
+                                                <td class="text-xs-left">
+                                                    {{ props.item.info }}
+                                                </td>
+                                            </div>
+                                    </template>
+                                </v-data-table>
+                            </v-flex>
+                        </transition>
+                    </v-flex>
+                    <v-flex id="map" xs4 md4 lg4></v-flex>
                 </v-layout>
             </v-container>
         </v-content>
@@ -82,21 +89,35 @@
 <script>
 import BackEndApi from '../services/api/backEnd';
 import axios from 'axios';
+import Mapbox from "mapbox-gl";
+import { MglMap, MglMarker  } from "vue-mapbox";
+import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
+import  '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 
 const sleep = (milliseconds) => { // sleep gia transition sto show info field
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
+var flag = 0;
+
 export default {
     name: 'DeliveryNotes',
+    components: {
+        MglMap, MglMarker, Mapbox
+    },
     data() {
         return {
+            accessToken: 'pk.eyJ1IjoiZ2Vvcmdla2wiLCJhIjoiY2s2bTc1dWJpMGwxMDNvbHN5aWx2dDRicyJ9.vOUIsWK8lxaqqYidj8w9uQ', // your access token. Needed if you using Mapbox maps
+            MapStyle: 'mapbox://styles/mapbox/streets-v11', // your map style
+            myCenter: [23.727539 ,37.983810],
+            flag: '',
             delName: '',
             dialog: '',
             search: '',
             searchNotes: '',
+            coordinates: '',
             note: '',
-            panel: [true],
+            panel: 0,
             myid: '',
             colorid: '',
             transition: false,
@@ -157,6 +178,7 @@ export default {
         BackEndApi.getCalls('/deliveryNotes') // pare ta nea fields wste na allaksei to onoma sto fields
         .then(response => {
             this.notesList = response.data.message;
+            this.flag = 0;
             // console.log(this.notesList)
         })
         .catch(error => {
@@ -199,10 +221,23 @@ export default {
                         this.info_array[6].info = this.notesList[i].loadingPlace;
                         this.info_array[7].info = this.notesList[i].taxOffice;
                         this.info_array[8].info = this.notesList[i].file;
+                        this.info_array[9].info = this.notesList[i].coordinates;
+                        this.flag=1;
+                        // this.init_map();
                         console.log(this.info_array)
+                        
                     }
                 }
             });
+            // flag=0;
+            // if(this.flag==1) {
+            //     console.log(this.flag+"trolo")
+                sleep(50).then(() => {
+                    console.log(this.flag+"trolo")
+                    this.init_map();
+                });
+            // }
+            
         },
         gotoNote() {
             this.$router.replace({ name: "homepage"});
@@ -248,8 +283,205 @@ export default {
             .catch(function(error) {
                 console.log(error);
             });
+        },
+        async init_map() {
+            console.log("vre")
+            mapboxgl.accessToken = 'pk.eyJ1IjoiZ2Vvcmdla2wiLCJhIjoiY2s2bTc1dWJpMGwxMDNvbHN5aWx2dDRicyJ9.vOUIsWK8lxaqqYidj8w9uQ';
+            var map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v11',
+                center:  [23.727539,37.983810],
+                zoom: 4.7,
+                attributionControl: false
+            });            
+            // var draw = new MapboxDraw({
+            //     // Instead of showing all the draw tools, show only the line string and delete tools
+            //     displayControlsDefault: false,
+            //     controls: {
+            //         line_string: true,
+            //         trash: true
+            //     },
+            //     styles: [
+            //         // Set the line style for the user-input coordinates
+            //         {
+            //         "id": "gl-draw-line",
+            //         "type": "line",
+            //         "filter": ["all", ["==", "$type", "LineString"],
+            //             ["!=", "mode", "static"]
+            //         ],
+            //         "layout": {
+            //             "line-cap": "round",
+            //             "line-join": "round"
+            //         },
+            //         "paint": {
+            //             "line-color": "#438EE4",
+            //             "line-dasharray": [0.2, 2],
+            //             "line-width": 4,
+            //             "line-opacity": 0.7
+            //         }
+            //         },
+            //         // Style the vertex point halos
+            //         {
+            //         "id": "gl-draw-polygon-and-line-vertex-halo-active",
+            //         "type": "circle",
+            //         "filter": ["all", ["==", "meta", "vertex"],
+            //             ["==", "$type", "Point"],
+            //             ["!=", "mode", "static"]
+            //         ],
+            //         "paint": {
+            //             "circle-radius": 12,
+            //             "circle-color": "#FFF"
+            //         }
+            //         },
+            //         // Style the vertex points
+            //         {
+            //         "id": "gl-draw-polygon-and-line-vertex-active",
+            //         "type": "circle",
+            //         "filter": ["all", ["==", "meta", "vertex"],
+            //             ["==", "$type", "Point"],
+            //             ["!=", "mode", "static"]
+            //         ],
+            //         "paint": {
+            //             "circle-radius": 8,
+            //             "circle-color": "#438EE4",
+            //         }
+            //         },
+            //     ]
+            // });
+
+            // Add the draw tool to the map
+            // map.addControl(draw);
+            // var delBut = document.getElementsByClassName('mapbox-gl-draw_ctrl-draw-btn.mapbox-gl-draw_trash');
+            // delBut.onclick = (e) => {
+            //     console.log("tre")
+            //     map.removeLayer('route');
+            // }
+            console.log(this.info_array)
+            var myCenter = this.info_array[9].info;
+            // var myCenter = "22.466937504109467,38.78322115013967;21.925907244339726,39.829767411608145"
+            map.on('load', function() {
+                getMatch(myCenter);
+                map.addLayer({
+                    id: 'point',
+                    type: 'circle',
+                    source: {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: [{
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'Point',
+                            coordinates: myCenter
+                        }
+                        }
+                        ]
+                    }
+                    },
+                    paint: {
+                    'circle-radius': 10,
+                    'circle-color': '#3887be'
+                    }
+                });
+                // map.on('click',  function(e) {
+                    // console.log(e.lngLat);
+                    // });
+                    // Change the cursor to a pointer when the mouse is over the places layer.
+                    // map.on('draw.create', updateRoute);
+                    // map.on('draw.update', updateRoute);
+                    getMatch(myCenter);
+            });
+            // Use the coordinates you drew to make the Map Matching API request
+            function updateRoute() {
+                // Set the profile
+                var profile = "driving";
+                // Get the coordinates that were drawn on the map
+                var data = draw.getAll();
+                var lastFeature = data.features.length - 1;
+                var coords = data.features[lastFeature].geometry.coordinates;
+                // Format the coordinates
+                var newCoords = coords.join(';')
+                // Set the radius for each coordinate pair to 25 meters
+                var radius = [];
+                coords.forEach(element => {
+                    radius.push(25);
+                });
+                getMatch(newCoords, radius, profile);
+            }
+
+            // Make a Map Matching request
+            function getMatch(coordinates, radius, profile) {
+                // Separate the radiuses with semicolons
+                // var radiuses = radius.join(';')
+                // Create the query
+                // var query = "https://api.mapbox.com/directions-matrix/v1/mapbox/driving/"+coordinates+"?steps=true&geometries=geojson&radiuses="+radiuses+"&access_token=" + mapboxgl.accessToken;
+                var query = "https://api.mapbox.com/directions/v5/mapbox/driving/"+coordinates+"?geometries=geojson&steps=true&access_token=" + mapboxgl.accessToken;
+                // var query = "https://api.mapbox.com/directions/v5/mapbox/driving/22.466937504109467,38.78322115013967;21.925907244339726,39.829767411608145?geometries=geojson&steps=true&access_token=pk.eyJ1IjoiZ2Vvcmdla2wiLCJhIjoiY2s2bTc1dWJpMGwxMDNvbHN5aWx2dDRicyJ9.vOUIsWK8lxaqqYidj8w9uQ"
+                console.log(query)
+                let xhr = new XMLHttpRequest();
+                xhr.open('GET', query, true);
+                // request state change event
+                xhr.onload = function() {
+                    var json = JSON.parse(xhr.response);
+                    console.log(json)
+                    var data = json.routes[0];
+                    var route = data.geometry.coordinates;
+                    var geojson = {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: route
+                    }};
+                    if(map.getSource('route')) {
+                        // map.removeLayer('route')
+                        // map.removeSource('route')
+                        map.getSource('route').setData(geojson);
+                    } 
+                    else { // otherwise, make a new request
+                        map.addLayer({
+                            id: 'route',
+                            type: 'line',
+                            source: {
+                            type: 'geojson',
+                            data: {
+                                type: 'Feature',
+                                properties: {},
+                                geometry: {
+                                type: 'LineString',
+                                coordinates: geojson
+                                }
+                            }
+                            },
+                            layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                            },
+                            paint: {
+                            'line-color': '#3887be',
+                            'line-width': 5,
+                            'line-opacity': 0.75
+                            }
+                        });
+                    }
+                };
+                // submitCoords = coordinates;
+                // console.log(submitCoords)
+                xhr.send();
+            };
         }
-    }
+    },
+    mounted () {
+        // this.init_map();
+        // console.log(this.flag+"yo")
+        // if(this.flag==1) {
+        //     // sleep(1000).then(() => {
+        //         console.log("mpainq")
+        //         this.init_map();
+        //     // });
+        // }
+    },
 }
 </script>
 
@@ -260,7 +492,13 @@ export default {
     margin: 0px;
     border-bottom: solid 0.5px #000;
 }
-
+#map {
+        height: 400px;
+        width: 400px;
+        top:0;
+        position: relative;
+        float:left;
+    }
 #names:hover {
     border: solid;
     cursor: pointer;
@@ -272,5 +510,11 @@ export default {
 }
 .fade-enter-active {
     transition: all 1s ease;
+}
+/* .text-xs-center {
+    text-align: left;
+} */
+.mapbox-ctrl-bottom-left{
+    display: none !important;
 }
 </style>
