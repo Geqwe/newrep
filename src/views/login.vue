@@ -69,6 +69,13 @@ export default {
         gotoReg() {
             this.$router.replace({ name: "register"});
         }
+    },
+    created () {
+        window.addEventListener('keydown', (e) => {
+            if(e.key == 'Enter') {
+                this.login();
+            }
+        });
     }
 }
 </script>

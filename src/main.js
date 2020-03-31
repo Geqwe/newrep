@@ -7,6 +7,7 @@ import Vuetify from 'vuetify'
 import axios from 'axios'
 import 'vuetify/dist/vuetify.min.css'
 import store from './store/index' // paizei kai mono store xwris index
+import Mapbox from 'mapbox-gl-vue';
 /*
 window.Bus=new Vue;
 window.axios=axios
@@ -58,6 +59,6 @@ new Vue({
   el: '#app',
   router,
   store,
-  components: { App },
+  components: { App, 'mapbox': Mapbox },
   template: '<App/>'
 })

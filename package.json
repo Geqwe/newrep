@@ -10,10 +10,15 @@
     "build": "node build/build.js"
   },
   "dependencies": {
+    "@mapbox/mapbox-gl-directions": "^4.0.3",
+    "@mapbox/mapbox-gl-draw": "^1.1.2",
     "autocomplete": "0.0.1",
     "axios": "^0.18.0",
+    "mapbox-gl": "^1.7.0",
+    "mapbox-gl-vue": "^2.0.4",
     "v-autocomplete": "^1.8.2",
     "vue": "^2.5.2",
+    "vue-mapbox": "^0.4.1",
     "vue-pdf": "^4.0.7",
     "vue-router": "^3.0.1",
     "vuetify": "^1.0.0",

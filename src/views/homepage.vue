@@ -11,25 +11,35 @@
                             </v-toolbar>
                             <v-card-text>
                                 <v-form>
-                                    <v-text-field prepend-icon="person" persistent-hint name="company_name" v-model="company_name" label="Company Name" />
                                     <v-layout row wrap>
                                         <v-flex xs6 sm6 md6 lg6 xl6>
-                                            <v-text-field prepend-icon="work" label="Job" type="text" name="job" v-model="job"/>
-                                            <v-text-field prepend-icon="home" type="text" name="address" v-model="address" label="Address" />
-                                            <v-text-field prepend-icon="description" type="text" name="afm" v-model="afm" label="Vat Registration Number" />
+                                            <v-text-field prepend-icon="person" name="company_name" v-model="company_name" label="Επωνυμία Εταιρείας" />
+                                            <v-text-field prepend-icon="work" label="Απασχόληση" type="text" name="job" v-model="job"/>
+                                            <v-text-field prepend-icon="home" type="text" name="address" v-model="address" label="Διεύθυνση" />
+                                            <v-text-field prepend-icon="description" type="text" name="afm" v-model="afm" label="ΑΦΜ" />
                                             <div class="large-12 medium-12 small-12 cell">
                                                 <label>ΑΡΧΕΙΟ ΠΑΡΑΓΓΕΛΙΑΣ
                                                     <input type="file" id="file" ref="file"/>
                                                 </label>
                                             </div>
                                         </v-flex>
-                                        <v-flex xs6 sm6 md6 lg6 xl6>
-                                            <v-select  prepend-icon="store" autocomplete :items="city" placeholder="City" editable v-model="city1"/>
-                                            <v-select  prepend-icon="open_in_browser" autocomplete :items="city" placeholder="Place of Loading" editable v-model="place_of_loading"/>
-                                            <v-select  prepend-icon="room" autocomplete :items="city" placeholder="Destination" editable v-model="destination"/>
-                                            <v-select  prepend-icon="assignment" autocomplete :items="taxOffices" placeholder="Tax Office" editable v-model="doy"/>
+                                        <v-flex  xs6 sm6 md6 lg6 xl6>
+                                            <!-- <div ></div> -->
+                                            <v-container fluid fill-height>
+                                                 <v-layout row wrap>
+                                                    <div id="map">
+                                                    <!-- <pre id="info"></pre> -->
+                                                        <!-- <MglMarker id="marker" :coordinates="coordinates" color="blue" /> -->
+                                                    </div>
+                                                 </v-layout>
+                                            </v-container>
+                                            <!-- <v-select  prepend-icon="store" autocomplete :items="city" placeholder="Πόλη" editable v-model="city1"/>
+                                            <v-select  prepend-icon="open_in_browser" autocomplete :items="city" placeholder="Τοποθεσία Φόρτωσης" editable v-model="place_of_loading"/>
+                                            <v-select  prepend-icon="room" autocomplete :items="city" placeholder="Προορισμός" editable v-model="destination"/>
+                                            <v-select  prepend-icon="assignment" autocomplete :items="taxOffices" placeholder="ΔΟΥ" editable v-model="doy"/>
+                                            <v-select prepend-icon="directions" autocomplete :items="city" placeholder="Διαδρομή" editable v-model="road_taken"/> -->
                                         </v-flex>
-                                        <v-flex xs6 sm6 md6 lg12 xl6>
+                                        <v-flex xs12 sm12 md12 lg12 xl12>
                                             <v-data-table hide-actions flat :headers="headers" :items="details" height="3">
                                                 <template flat slot="headerCell" slot-scope="props">
                                                     <span>{{ props.header.text }}</span>
@@ -47,9 +57,9 @@
                                 </v-form>
                             </v-card-text>
                             <v-card-actions>
-                                <v-btn color="success" @click="submit()">SUBMIT</v-btn>
+                                <v-btn color="success" @click="submit()">ΚΑΤΑΧΩΡΗΣΗ</v-btn>
                                 <v-spacer></v-spacer>
-                                <v-btn color="primary" @click="add_row()">ADD NEW ROW</v-btn>
+                                <v-btn color="primary" @click="add_row()">ΠΡΟΣΘΗΚΗ ΓΡΑΜΜΗΣ</v-btn>
                             </v-card-actions>
                         </v-card>
                     </v-flex>
@@ -63,15 +73,37 @@
 import Autocomplete from 'v-autocomplete'
 import BackEndApi from '../services/api/backEnd';
 import axios from 'axios';
+import Mapbox from "mapbox-gl";
+import { MglMap, MglMarker  } from "vue-mapbox";
+import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
+import  '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
+
+// mapboxgl.accessToken = 'pk.eyJ1IjoiZ2Vvcmdla2wiLCJhIjoiY2s2bTc1dWJpMGwxMDNvbHN5aWx2dDRicyJ9.vOUIsWK8lxaqqYidj8w9uQ';
+// var map = new mapboxgl.Map({
+//     container: 'map',
+//     style: 'mapbox://styles/mapbox/streets-v9',
+//     center: [23.727539 ,37.983810],
+//     zoom: 4.7
+// });
 
 const sleep = (milliseconds) => { // sleep gia transition sto show info field
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
+var submitCoords;
+
 export default {
     name: 'Homepage',
+    components: {
+        MglMap, MglMarker, Mapbox
+    },
     data() {
         return {
+            myMarkers: [],
+            accessToken: 'pk.eyJ1IjoiZ2Vvcmdla2wiLCJhIjoiY2s2bTc1dWJpMGwxMDNvbHN5aWx2dDRicyJ9.vOUIsWK8lxaqqYidj8w9uQ', // your access token. Needed if you using Mapbox maps
+            MapStyle: 'mapbox://styles/mapbox/streets-v11', // your map style
+            coordinates: [ 23.727539 ,37.983810], //longitude , latitude
+            road_taken: '',
             snackbar_created: false,
             company_name: "",
             job: "",
@@ -260,20 +292,213 @@ export default {
                 }
             ],
             details: [],
-            file: ''
+            file: '',
+            mMap: '',
+            myCenter: [23.727539 ,37.983810]
         };
     },
     created () {
         const token = localStorage.getItem('access_token')
         axios.defaults.headers.common['Authorization'] = token
-        console.log(token)
+        // var submitCoords = 'yolo';
         this.init_details()
+        console.log(token)
+        window.addEventListener('keydown', (e) => {
+            if(e.key == 'Enter') {
+                this.submit();
+            }
+        });
+    },
+    mounted () {
+        this.init_map();
     },
     methods: {
+        async init_map() {
+            mapboxgl.accessToken = 'pk.eyJ1IjoiZ2Vvcmdla2wiLCJhIjoiY2s2bTc1dWJpMGwxMDNvbHN5aWx2dDRicyJ9.vOUIsWK8lxaqqYidj8w9uQ';
+            var map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v11',
+                center:  [23.727539,37.983810],
+                zoom: 4.7
+            });            
+            var draw = new MapboxDraw({
+                // Instead of showing all the draw tools, show only the line string and delete tools
+                displayControlsDefault: false,
+                controls: {
+                    line_string: true,
+                    trash: true
+                },
+                styles: [
+                    // Set the line style for the user-input coordinates
+                    {
+                    "id": "gl-draw-line",
+                    "type": "line",
+                    "filter": ["all", ["==", "$type", "LineString"],
+                        ["!=", "mode", "static"]
+                    ],
+                    "layout": {
+                        "line-cap": "round",
+                        "line-join": "round"
+                    },
+                    "paint": {
+                        "line-color": "#438EE4",
+                        "line-dasharray": [0.2, 2],
+                        "line-width": 4,
+                        "line-opacity": 0.7
+                    }
+                    },
+                    // Style the vertex point halos
+                    {
+                    "id": "gl-draw-polygon-and-line-vertex-halo-active",
+                    "type": "circle",
+                    "filter": ["all", ["==", "meta", "vertex"],
+                        ["==", "$type", "Point"],
+                        ["!=", "mode", "static"]
+                    ],
+                    "paint": {
+                        "circle-radius": 12,
+                        "circle-color": "#FFF"
+                    }
+                    },
+                    // Style the vertex points
+                    {
+                    "id": "gl-draw-polygon-and-line-vertex-active",
+                    "type": "circle",
+                    "filter": ["all", ["==", "meta", "vertex"],
+                        ["==", "$type", "Point"],
+                        ["!=", "mode", "static"]
+                    ],
+                    "paint": {
+                        "circle-radius": 8,
+                        "circle-color": "#438EE4",
+                    }
+                    },
+                ]
+            });
+
+            // Add the draw tool to the map
+            map.addControl(draw);
+            var delBut = document.getElementsByClassName('mapbox-gl-draw_ctrl-draw-btn.mapbox-gl-draw_trash');
+            delBut.onclick = (e) => {
+                console.log("tre")
+                map.removeLayer('route');
+            }
+            var myCenter = "23.727539 ,37.983810;23.727539 ,37.983810"
+            map.on('load', function() {
+                getMatch(myCenter);
+                map.addLayer({
+                    id: 'point',
+                    type: 'circle',
+                    source: {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: [{
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'Point',
+                            coordinates: myCenter
+                        }
+                        }
+                        ]
+                    }
+                    },
+                    paint: {
+                    'circle-radius': 10,
+                    'circle-color': '#3887be'
+                    }
+                });
+                map.on('click',  function(e) {
+                    console.log(e.lngLat);
+                    });
+                    // Change the cursor to a pointer when the mouse is over the places layer.
+                    map.on('draw.create', updateRoute);
+                    map.on('draw.update', updateRoute);
+            });
+            // Use the coordinates you drew to make the Map Matching API request
+            function updateRoute() {
+                // Set the profile
+                var profile = "driving";
+                // Get the coordinates that were drawn on the map
+                var data = draw.getAll();
+                var lastFeature = data.features.length - 1;
+                var coords = data.features[lastFeature].geometry.coordinates;
+                // Format the coordinates
+                var newCoords = coords.join(';')
+                // Set the radius for each coordinate pair to 25 meters
+                var radius = [];
+                coords.forEach(element => {
+                    radius.push(25);
+                });
+                getMatch(newCoords, radius, profile);
+            }
+
+            // Make a Map Matching request
+            function getMatch(coordinates, radius, profile) {
+                // Separate the radiuses with semicolons
+                // var radiuses = radius.join(';')
+                // Create the query
+                // var query = "https://api.mapbox.com/directions-matrix/v1/mapbox/driving/"+coordinates+"?steps=true&geometries=geojson&radiuses="+radiuses+"&access_token=" + mapboxgl.accessToken;
+                var query = "https://api.mapbox.com/directions/v5/mapbox/driving/"+coordinates+"?geometries=geojson&steps=true&access_token=" + mapboxgl.accessToken;
+                console.log(query)
+                let xhr = new XMLHttpRequest();
+                xhr.open('GET', query, true);
+                // request state change event
+                xhr.onload = function() {
+                    var json = JSON.parse(xhr.response);
+                    console.log(json)
+                    var data = json.routes[0];
+                    var route = data.geometry.coordinates;
+                    var geojson = {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: route
+                    }};
+                    if(map.getSource('route')) {
+                        // map.removeLayer('route')
+                        // map.removeSource('route')
+                        map.getSource('route').setData(geojson);
+                    } 
+                    else { // otherwise, make a new request
+                        map.addLayer({
+                            id: 'route',
+                            type: 'line',
+                            source: {
+                            type: 'geojson',
+                            data: {
+                                type: 'Feature',
+                                properties: {},
+                                geometry: {
+                                type: 'LineString',
+                                coordinates: geojson
+                                }
+                            }
+                            },
+                            layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                            },
+                            paint: {
+                            'line-color': '#3887be',
+                            'line-width': 5,
+                            'line-opacity': 0.75
+                            }
+                        });
+                    }
+                };
+                submitCoords = coordinates;
+                console.log(submitCoords)
+                xhr.send();
+            };
+        },
         submit() {
             const token = localStorage.getItem('access_token')
             axios.defaults.headers.common['Authorization'] = token
             this.file = this.$refs.file.files[0];
+            console.log("in submit"+submitCoords);
             // console.log(this.details)
             let formData = new FormData();
             if(this.file != null) {
@@ -292,6 +517,7 @@ export default {
             formData.set('loadingPlace',this.place_of_loading);
             formData.set('taxOffice',this.doy);
             formData.set('destination',this.destination);
+            formData.set('coordinates',submitCoords);
             // formData.set('details',this.details);
             axios.post('http://10.64.92.213:5000/deliveryNotes/createDeliveryNote', formData,
                 { headers: {'Content-Type': 'multipart/form-data'}}
@@ -313,7 +539,8 @@ export default {
         },
         add_row() {
             this.details.push({});
-        }
+        },
+        
     }
 }
 </script>
@@ -325,4 +552,30 @@ export default {
         padding: 20px;
         margin-top: 10px;
     }
+    #map {
+        margin-left: 5px;
+        margin-right: 5px;
+        position: relative;
+    }
+    /* .marker {
+    display: block;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    } */
+    #info {
+    display: block;
+    position: relative;
+    margin: 0px auto;
+    width: 50%;
+    padding: 10px;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    text-align: center;
+    color: #222;
+    background: #fff;
+    }
+
 </style>
