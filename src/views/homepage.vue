@@ -390,10 +390,11 @@ export default {
 
             // Add the draw tool to the map
             map.addControl(draw);
-            var delBut = document.getElementsByClassName('mapbox-gl-draw_ctrl-draw-btn.mapbox-gl-draw_trash');
-            delBut.onclick = (e) => {
-                map.removeLayer('route');
-            }
+            map.on('draw.delete', removeRoute);
+            // var delBut = document.getElementsByClassName('mapbox-gl-draw_ctrl-draw-btn.mapbox-gl-draw_trash');
+            // delBut.onclick = (e) => {
+            //     map.removeLayer('route');
+            // }
             var myCenter = "23.727539 ,37.983810;23.727539 ,37.983810"
             map.on('load', function() {
                 getMatch(myCenter);
@@ -518,6 +519,15 @@ export default {
                 console.log(submitCoords)
                 xhr.send();
             };
+
+            function removeRoute() {
+                if (map.getSource('route')) {
+                    map.removeLayer('route');
+                    map.removeSource('route');
+                } else {
+                    return;
+                }
+            }
         },
         submit() {
             const token = localStorage.getItem('access_token')

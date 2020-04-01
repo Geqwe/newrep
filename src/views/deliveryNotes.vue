@@ -95,7 +95,6 @@ import Mapbox from "mapbox-gl";
 import { MglMap, MglMarker  } from "vue-mapbox";
 import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
 import  '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
-import 'mapbox-gl/dist/mapbox-gl.css'
 
 const sleep = (milliseconds) => { // sleep gia transition sto show info field
   return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -358,10 +357,10 @@ export default {
                 // var radiuses = radius.join(';')
                 // Create the query
                 // var query = "https://api.mapbox.com/directions-matrix/v1/mapbox/driving/"+coordinates+"?steps=true&geometries=geojson&radiuses="+radiuses+"&access_token=" + mapboxgl.accessToken;
-                var splitted = coordinates.split(";",2)
-                console.log([splitted[0]])
-                var splity = splitted[0].split(",",2)
-                console.log(splity[0], splity[1])
+                // var splitted = coordinates.split(";",2)
+                // console.log([splitted[0]])
+                // var splity = splitted[0].split(",",2)
+                // console.log(splity[0], splity[1])
                 // var marker = new mapboxgl.Marker()
                 //     .setLngLat([parseInt(splity[0]),parseInt(splity[1])])
                 //     .addTo(map);
@@ -465,10 +464,5 @@ export default {
 .fade-enter-active {
     transition: all 1s ease;
 }
-/* .text-xs-center {
-    text-align: left;
-} */
-.mapbox-ctrl-bottom-left{
-    display: none !important;
-}
+
 </style>
