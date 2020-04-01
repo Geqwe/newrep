@@ -324,7 +324,7 @@ export default {
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v11',
                 center:  [23.727539,37.983810],
-                zoom: 4.7,
+                zoom: 3.9,
                 attributionControl: false
             });            
             var draw = new MapboxDraw({
@@ -382,11 +382,16 @@ export default {
                 ]
             });
 
+            var popup = new mapboxgl.Popup({ closeOnClick: false })
+                .setLngLat([19.5000, 32.586162])
+                .setHTML('<h3 style="color:black;font-size:9.1px;">Πατήστε το εικονίδιο πάνω δεξιά για να σχεδιάσετε τη διαδρομή σας</br>Μετά, πατήστε την τελευταία κουκίδα για επικύρωση</h3>')
+                .addTo(map);
+            
+
             // Add the draw tool to the map
             map.addControl(draw);
             var delBut = document.getElementsByClassName('mapbox-gl-draw_ctrl-draw-btn.mapbox-gl-draw_trash');
             delBut.onclick = (e) => {
-                console.log("tre")
                 map.removeLayer('route');
             }
             var myCenter = "23.727539 ,37.983810;23.727539 ,37.983810"
@@ -446,6 +451,20 @@ export default {
                 // var radiuses = radius.join(';')
                 // Create the query
                 // var query = "https://api.mapbox.com/directions-matrix/v1/mapbox/driving/"+coordinates+"?steps=true&geometries=geojson&radiuses="+radiuses+"&access_token=" + mapboxgl.accessToken;
+                var first = 0;
+                if(first!=0) {
+                    first = 1;
+                    var splitted = coordinates.split(";",2)
+                    console.log([splitted[0]])
+                    var splity = splitted[0].split(",",2)
+                    console.log([splity[0]])
+                    var marker = new mapboxgl.Marker({offset: {
+                        x: -50,
+                        y: -142
+                    }})
+                        .setLngLat([parseInt(splity[0]),parseInt(splity[1])])
+                        .addTo(map);
+                }
                 var query = "https://api.mapbox.com/directions/v5/mapbox/driving/"+coordinates+"?geometries=geojson&steps=true&access_token=" + mapboxgl.accessToken;
                 console.log(query)
                 let xhr = new XMLHttpRequest();

@@ -78,7 +78,9 @@
                             </v-flex>
                         </transition>
                     </v-flex>
-                    <v-flex id="map" xs4 md4 lg4></v-flex>
+                    <transition name="fade">
+                        <v-flex v-if="transition" id="map" xs4 md4 lg4></v-flex>
+                    </transition>
                 </v-layout>
             </v-container>
         </v-content>
@@ -93,6 +95,7 @@ import Mapbox from "mapbox-gl";
 import { MglMap, MglMarker  } from "vue-mapbox";
 import MapboxDirections from "@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions";
 import  '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 const sleep = (milliseconds) => { // sleep gia transition sto show info field
   return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -294,68 +297,7 @@ export default {
                 zoom: 4.7,
                 attributionControl: false
             });            
-            // var draw = new MapboxDraw({
-            //     // Instead of showing all the draw tools, show only the line string and delete tools
-            //     displayControlsDefault: false,
-            //     controls: {
-            //         line_string: true,
-            //         trash: true
-            //     },
-            //     styles: [
-            //         // Set the line style for the user-input coordinates
-            //         {
-            //         "id": "gl-draw-line",
-            //         "type": "line",
-            //         "filter": ["all", ["==", "$type", "LineString"],
-            //             ["!=", "mode", "static"]
-            //         ],
-            //         "layout": {
-            //             "line-cap": "round",
-            //             "line-join": "round"
-            //         },
-            //         "paint": {
-            //             "line-color": "#438EE4",
-            //             "line-dasharray": [0.2, 2],
-            //             "line-width": 4,
-            //             "line-opacity": 0.7
-            //         }
-            //         },
-            //         // Style the vertex point halos
-            //         {
-            //         "id": "gl-draw-polygon-and-line-vertex-halo-active",
-            //         "type": "circle",
-            //         "filter": ["all", ["==", "meta", "vertex"],
-            //             ["==", "$type", "Point"],
-            //             ["!=", "mode", "static"]
-            //         ],
-            //         "paint": {
-            //             "circle-radius": 12,
-            //             "circle-color": "#FFF"
-            //         }
-            //         },
-            //         // Style the vertex points
-            //         {
-            //         "id": "gl-draw-polygon-and-line-vertex-active",
-            //         "type": "circle",
-            //         "filter": ["all", ["==", "meta", "vertex"],
-            //             ["==", "$type", "Point"],
-            //             ["!=", "mode", "static"]
-            //         ],
-            //         "paint": {
-            //             "circle-radius": 8,
-            //             "circle-color": "#438EE4",
-            //         }
-            //         },
-            //     ]
-            // });
-
-            // Add the draw tool to the map
-            // map.addControl(draw);
-            // var delBut = document.getElementsByClassName('mapbox-gl-draw_ctrl-draw-btn.mapbox-gl-draw_trash');
-            // delBut.onclick = (e) => {
-            //     console.log("tre")
-            //     map.removeLayer('route');
-            // }
+            
             console.log(this.info_array)
             var myCenter = this.info_array[9].info;
             // var myCenter = "22.466937504109467,38.78322115013967;21.925907244339726,39.829767411608145"
@@ -416,6 +358,17 @@ export default {
                 // var radiuses = radius.join(';')
                 // Create the query
                 // var query = "https://api.mapbox.com/directions-matrix/v1/mapbox/driving/"+coordinates+"?steps=true&geometries=geojson&radiuses="+radiuses+"&access_token=" + mapboxgl.accessToken;
+                var splitted = coordinates.split(";",2)
+                console.log([splitted[0]])
+                var splity = splitted[0].split(",",2)
+                console.log(splity[0], splity[1])
+                // var marker = new mapboxgl.Marker()
+                //     .setLngLat([parseInt(splity[0]),parseInt(splity[1])])
+                //     .addTo(map);
+                //  var popup = new mapboxgl.Popup({ closeOnClick: false })
+                // .setLngLat([parseInt(splity[0]),parseInt(splity[1])])
+                // .setHTML('<h3 style="color:black;font-size:15px;">ΑΡΧΗ</h3>')
+                // .addTo(map);
                 var query = "https://api.mapbox.com/directions/v5/mapbox/driving/"+coordinates+"?geometries=geojson&steps=true&access_token=" + mapboxgl.accessToken;
                 // var query = "https://api.mapbox.com/directions/v5/mapbox/driving/22.466937504109467,38.78322115013967;21.925907244339726,39.829767411608145?geometries=geojson&steps=true&access_token=pk.eyJ1IjoiZ2Vvcmdla2wiLCJhIjoiY2s2bTc1dWJpMGwxMDNvbHN5aWx2dDRicyJ9.vOUIsWK8lxaqqYidj8w9uQ"
                 console.log(query)
@@ -493,11 +446,12 @@ export default {
     border-bottom: solid 0.5px #000;
 }
 #map {
-        height: 400px;
-        width: 400px;
-        top:0;
+        /* height: 400px; */
+        /* width: 400px; */
+        /* top:0; */
+        
         position: relative;
-        float:left;
+        /* float:left; */
     }
 #names:hover {
     border: solid;
